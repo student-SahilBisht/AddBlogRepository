@@ -1,40 +1,73 @@
-import { useState, useRef, useReducer, useEffect } from "react";
-function reduceBlog(state, action){
-    switch(action.type){
-        case "ADD":
-            return [action.blog,...state];
-            case "REMOVE":
-                return state.filter((blog,index)=>index!==action.index);
-                default:
-                    return [];
+import { useState, useRef, useEffect } from "react";
+import { db } from "./firebaseInit";
+import { collection, addDoc,onSnapshot, doc, deleteDoc } from "firebase/firestore"; 
 
-    }
-}
+// function reduceBlog(state, action){
+//     switch(action.type){
+//         case "ADD":
+//             return [action.blog,...state];
+//             case "REMOVE":
+//                 return state.filter((blog,index)=>index!==action.index);
+//                 default:
+//                     return [];
+
+//     }
+// }
 
 export default function Blog(){
 // const [title, setTitle]=useState("");
 // const [content, setContent]=useState("");
 const [formData, setFromData]=useState({title:"", content:""})
-// const [blogarr, setBlogarr]=useState([]);
-const [blogs, dispatch]=useReducer(reduceBlog, []);
+const [blogarr, setBlogarr]=useState([]);
+//const [blogs, dispatch]=useReducer(reduceBlog, []);
 const titleRef=useRef(null);
 
 useEffect(()=>{
-    if(blogs.length){
-        document.title=blogs[0].title;
+    if(blogarr.length){
+        document.title=blogarr[0].title;
     }
-})
+});
+useEffect(()=>{
+    // async function fetchData(){
+    //     const snapshot=await getDocs(collection(db, "blogs"));
+    //    const totalBlogs= snapshot.docs.map((doc)=>{
+    //        return{ id:doc.id,
+    //         ...doc.data()
+    //     }
+    //     })
+    //   setBlogarr(totalBlogs);
+        
+    // }
+    // fetchData();
+    const unsub=onSnapshot(collection(db,"blogs"),(snapshot)=>{
+        const totalBlogs= snapshot.docs.map((doc)=>{
+                   return{
+                     id:doc.id,
+                    ...doc.data()
+                   }
+                })
+              setBlogarr(totalBlogs);
+            })
+},[])
 
-function handleSubmit(e){
+async function handleSubmit(e){
     e.preventDefault();
-    // setBlogarr([{title:formData.title, content:formData.content},...blogarr])
-    dispatch({type:"ADD", blog:{title:formData.title, content:formData.content}})
+   // setBlogarr([{title:formData.title, content:formData.content},...blogarr])
+   // dispatch({type:"ADD", blog:{title:formData.title, content:formData.content}})
+    // Add a new document with a generated id.
+   await addDoc(collection(db, "blogs"), {
+    title: formData.title,
+    content: formData.content,
+    createdOn:new Date()
+  });
    setFromData({title:"", content:""})
    titleRef.current.focus();
 }
-function removeBlog(i){
-    // setBlogarr(blogarr.filter((data,index)=>i!==index))
-    dispatch({type:"REMOVE", index:i})
+async function removeBlog(id){
+    // setBlogarr(blogarr.filter((data,index)=>i!==index));
+    const docRef=doc(db, 'blogs',id);
+    await deleteDoc(docRef);
+    
 }
     return(<>
     <h1 className="heading">Write a Blog!!</h1>
@@ -67,13 +100,13 @@ function removeBlog(i){
     <hr/>
     <h1 className="blog">Blog's</h1>
     {
-        blogs.map((blogdata,i)=>(
+        blogarr.map((blogdata,i)=>(
            <div className="datablog" key={i}>
              <h2 className="titlehead">Title:-{blogdata.title}</h2>
              <hr/>
              <p className="para">{blogdata.content}</p>
              <div>
-                <button className="delete" onClick={()=>removeBlog(i)}>delete</button>
+                <button className="delete" onClick={()=>removeBlog(blogdata.id)}>delete</button>
              </div>
            </div>
         ))

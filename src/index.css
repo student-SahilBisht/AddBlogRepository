@@ -66,8 +66,8 @@ form .title{
 }
 .datablog{
   height: auto;
-  max-width:85%;
-  margin: auto;
+  max-width:65%;
+  margin:10px auto;
   background-image: linear-gradient(45deg,cyan,yellow,lightgreen,gold);
 
   border: 2px solid red;
@@ -88,7 +88,7 @@ form .title{
   margin-top: 10px;
   height: 28px;
   width: 70px;
-  margin-left: 94%;
+  margin-left: 92%;
   background-color: red;
   color: white;
   font-weight: bolder;
